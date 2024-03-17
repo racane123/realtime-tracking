@@ -20,11 +20,27 @@ var geojson = {
   ],
 };
 
+// Function to calculate distance between two coordinates (Haversine formula)
+function calculateDistance(lon1, lat1, lon2, lat2) {
+  const earthRadius = 6371; // Earth's radius in kilometers
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = earthRadius * c; // Distance in kilometers
+  return distance;
+}
+
 // Function to fetch promise locations from the server
 function fetchPromiseLocations() {
   return fetch("fetch_promise_locations.php")
-    .then(response => response.json())
-    .catch(error => {
+    .then((response) => response.json())
+    .catch((error) => {
       console.error("Error fetching promise locations:", error);
       return []; // Return an empty array in case of error
     });
@@ -53,15 +69,12 @@ map.on("load", function () {
   map.addControl(geolocate);
 
   // Fetch promise locations from the server
-  fetchPromiseLocations()
-    .then(promiseLocations => {
-      // Add promise location markers
-      promiseLocations.forEach(location => {
-        new mapboxgl.Marker()
-          .setLngLat([location.lon, location.lat])
-          .addTo(map);
-      });
+  fetchPromiseLocations().then((promiseLocations) => {
+    // Add promise location markers
+    promiseLocations.forEach((location) => {
+      new mapboxgl.Marker().setLngLat([location.lon, location.lat]).addTo(map);
     });
+  });
 
   geolocate.on("geolocate", function (e) {
     var lon = e.coords.longitude;
@@ -70,6 +83,24 @@ map.on("load", function () {
     geojson.features[0].geometry.coordinates.push(position);
 
     map.getSource("trace").setData(geojson);
+
+    // Fetch promise locations from the server
+    fetchPromiseLocations().then((promiseLocations) => {
+      // Check distance to each promise location
+      promiseLocations.forEach((location) => {
+        const distance = calculateDistance(
+          lon,
+          lat,
+          location.lon,
+          location.lat
+        );
+        if (distance < 0.1) {
+          // Example threshold: 100 meters
+          // Notify user
+          alert("You are close to the promise location!");
+        }
+      });
+    });
 
     fetch("store_route.php", {
       method: "POST",

@@ -15,6 +15,9 @@
 <body>
     <div class="container">
         <h1>Truck Tracking</h1>
+        <h1><?php if(isset($_SESSION['username'])){
+            echo $_SESSION['username'];
+        } ?></h1>
         <div id="map"></div>
         <button id="startTracking">Start Tracking</button>
     </div>

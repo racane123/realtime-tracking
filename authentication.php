@@ -21,7 +21,9 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
         
         // Check if there is a row with given username and password
         if (mysqli_num_rows($result) == 1) {
-            // User found, set session variable
+            // User found, set session variables
+            $user = mysqli_fetch_assoc($result);
+            $_SESSION['user_id'] = $user['user_id']; // Store user ID in session
             $_SESSION['username'] = $username;
             echo "Welcome!";
             header('Location: index.php');
